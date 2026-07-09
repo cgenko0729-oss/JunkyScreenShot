@@ -124,6 +124,14 @@
 - **影响文件**：`CaptureOverlay.xaml`（新增 StrokeLayer 图层、Pen/Undo 按钮、PenPalette 面板）、`CaptureOverlay.xaml.cs`（画笔状态机、调色板、撤销、导出合成）
 - **说明**：编译通过（0 警告 0 错误），已重启新版本，交互效果需人工验证。
 
+### 2026-07-09 第 8 步：接入 Git 版本控制并推送 GitHub
+- **做了什么**：
+  - 新建 `.gitignore`（排除 bin/、obj/、.vs/ 等构建产物）。
+  - `git init`（默认分支 main）→ 初始提交（12 个文件）→ 推送到 https://github.com/cgenko0729-oss/JunkyScreenShot.git。
+- **为什么**：用户要求上传到 GitHub 公开仓库，开始使用版本控制。
+- **影响文件**：`.gitignore`（新建）、`.git/`（仓库初始化）
+- **约定**：**从现在起，每个新功能都在 feature 分支上开发**（`feature/<功能名>`），完成后合并回 main 再推送。
+
 ---
 
 ## 如何测试
