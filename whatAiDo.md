@@ -143,6 +143,18 @@
 - **影响文件**：`App.xaml.cs`（设置读写 + 托盘菜单项）、`CaptureOverlay.xaml`（QuickSave 按钮）、`CaptureOverlay.xaml.cs`（QuickSave 逻辑 + SavePng 重构）
 - **说明**：本功能按新约定在 `feature/quicksave` 分支开发后合并回 main。编译 0 警告 0 错误，已重启新版本；QuickSave 落盘和托盘设置需人工验证。
 
+### 2026-07-10 第 10 步：发布为独立单文件 exe（分支 feature/publish-exe）
+- **做了什么**：
+  - 用 `dotnet publish` 发布自包含单文件版：`-c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none`。
+  - 产物是**一个 68 MB 的 JunkyScreenShot.exe**（`bin\Release\net8.0-windows\win-x64\publish\`），内含 .NET 8 运行时，拷到任何 64 位 Windows 上双击即可用，对方无需装 .NET、无需终端。
+  - 新增 `publish.cmd` 脚本：以后双击它就能重新打包。
+- **踩坑记录（重要）**：
+  - 第一次用常规单文件参数 `IncludeNativeLibrariesForSelfExtraction=true` 打包，程序**启动即崩溃**（事件日志：`DllNotFoundException` 于 WindowsBase）。这是 WPF 的已知限制——WPF 的原生 DLL（wpfgfx_cor3.dll、PresentationNative_cor3.dll 等）不支持这种打包方式。
+  - 解决办法：改用 `IncludeAllContentForSelfExtract=true`（.NET Core 3.1 式整体自解压，首次运行解压到 %TEMP%，WPF 兼容）。验证通过：启动后 12 秒存活、事件日志无新崩溃。
+- **为什么**：用户想把程序分发给不会用终端的人，双击 exe 就能用。
+- **影响文件**：`publish.cmd`（新建）、`whatAiDo.md`
+- **说明**：程序没有单实例保护，双开会导致 F2 热键冲突（第二个实例会弹警告）和双托盘图标，已记入 TODO。
+
 ---
 
 ## 如何测试
@@ -170,3 +182,4 @@
 - [x] ~~第一版没有标注功能~~ 已加入**画笔**标注（第 7 步）。
 - [ ] 其他标注工具未做：箭头、矩形/椭圆框、文字、马赛克、橡皮擦、Redo（重做）。参考图里的完整工具条留待后续版本。
 - [ ] 画笔粗细只有 3 档固定值（2/4/8），没有自定义取色器。
+- [ ] **没有单实例保护**：双开程序会导致 F2 热键冲突和双托盘图标，后续可用 Mutex 实现"已运行则不再启动"。
