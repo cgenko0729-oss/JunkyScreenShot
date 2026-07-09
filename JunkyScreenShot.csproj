@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- WinForms is only used for the tray icon (NotifyIcon) and screen capture (Screen/Graphics). -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- WFAC010: the WinForms analyzer wants DPI set via API, but this is a WPF app
+         and WPF only honors the manifest. Safe to suppress. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+    <AssemblyTitle>JunkyScreenShot</AssemblyTitle>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+</Project>

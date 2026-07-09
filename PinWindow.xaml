@@ -1,0 +1,14 @@
+<Window x:Class="JunkyScreenShot.PinWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Pinned Image"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        SizeToContent="WidthAndHeight">
+    <!-- Thin blue border so the pinned image stands out from the page behind it. -->
+    <Border BorderBrush="#FF2D8CFF" BorderThickness="1" Background="White">
+        <Image x:Name="PinnedImage" Stretch="Fill"/>
+    </Border>
+</Window>
