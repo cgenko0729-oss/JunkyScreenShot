@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Interop;
 using WinForms = System.Windows.Forms;
@@ -39,10 +40,66 @@ namespace JunkyScreenShot
             base.OnExit(e);
         }
 
+        // ---- QuickSave default folder (persisted as a one-line text file in %AppData%) ----
+
+        private static string SettingsFilePath => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "JunkyScreenShot", "quicksave_folder.txt");
+
+        /// <summary>Returns the user-chosen QuickSave folder, or Pictures\JunkyScreenShot by default.</summary>
+        public static string GetQuickSaveFolder()
+        {
+            try
+            {
+                if (File.Exists(SettingsFilePath))
+                {
+                    string saved = File.ReadAllText(SettingsFilePath).Trim();
+                    if (saved.Length > 0)
+                        return saved;
+                }
+            }
+            catch
+            {
+                // Unreadable settings file: fall through to the default folder.
+            }
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "JunkyScreenShot");
+        }
+
+        public static void SetQuickSaveFolder(string folder)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(SettingsFilePath)!);
+            File.WriteAllText(SettingsFilePath, folder);
+        }
+
+        /// <summary>Tray menu action: pick and persist the QuickSave default folder.</summary>
+        private void ChooseQuickSaveFolder()
+        {
+            using var dialog = new WinForms.FolderBrowserDialog
+            {
+                Description = "Choose the default folder for QuickSave screenshots",
+                UseDescriptionForTitle = true,
+                SelectedPath = GetQuickSaveFolder()
+            };
+            if (dialog.ShowDialog() == WinForms.DialogResult.OK)
+            {
+                try
+                {
+                    SetQuickSaveFolder(dialog.SelectedPath);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Failed to save the setting: " + ex.Message,
+                        "JunkyScreenShot", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
         private void CreateTrayIcon()
         {
             var menu = new WinForms.ContextMenuStrip();
             menu.Items.Add("Capture (F2)", null, (_, _) => StartCapture());
+            menu.Items.Add("Set QuickSave Folder...", null, (_, _) => ChooseQuickSaveFolder());
             menu.Items.Add("Exit", null, (_, _) => Shutdown());
 
             _trayIcon = new WinForms.NotifyIcon
