@@ -132,6 +132,17 @@
 - **影响文件**：`.gitignore`（新建）、`.git/`（仓库初始化）
 - **约定**：**从现在起，每个新功能都在 feature 分支上开发**（`feature/<功能名>`），完成后合并回 main 再推送。
 
+### 2026-07-09 第 9 步：QuickSave 快速保存 + 托盘设置默认文件夹（分支 feature/quicksave）
+- **做了什么**：
+  - 工具条在 Save 旁新增 **QuickSave** 按钮：不弹对话框，直接把 PNG 存到默认文件夹（文件名 screenshot_yyyyMMdd_HHmmss.png，同秒重名时自动加 _1、_2 后缀），保存后关闭截图模式。
+  - 托盘菜单在 Capture 和 Exit 之间新增 **Set QuickSave Folder...**：用 FolderBrowserDialog 选择并保存默认文件夹。
+  - 设置持久化走最简单方案：把路径写进 `%AppData%\JunkyScreenShot\quicksave_folder.txt`（一行文本），读写逻辑作为两个静态方法放在 App 里，不新建 Settings 类。
+  - 未设置过时默认用 `图片\JunkyScreenShot`，首次 QuickSave 自动建目录。
+  - 顺便重构：PNG 编码写盘抽成 `SavePng(path)`，Save 和 QuickSave 共用。
+- **为什么**：用户要求常用保存不必每次选文件夹；默认文件夹要能在托盘里设置和修改。
+- **影响文件**：`App.xaml.cs`（设置读写 + 托盘菜单项）、`CaptureOverlay.xaml`（QuickSave 按钮）、`CaptureOverlay.xaml.cs`（QuickSave 逻辑 + SavePng 重构）
+- **说明**：本功能按新约定在 `feature/quicksave` 分支开发后合并回 main。编译 0 警告 0 错误，已重启新版本；QuickSave 落盘和托盘设置需人工验证。
+
 ---
 
 ## 如何测试
@@ -141,7 +152,7 @@
 3. 按 **F2**（或托盘菜单 Capture）：屏幕冻结变暗。
 4. 移动鼠标：光标下的窗口出现蓝框；**单击**即选中该窗口区域。
 5. 或按住左键**拖拽**：画出蓝色选框，旁边显示 "宽 x 高 px"。
-6. 松开后出现工具条：Pen / Undo / Copy / Save / Pin / Cancel（此时也可直接按 **Ctrl+C** 复制）。
+6. 松开后出现工具条：Pen / Undo / Copy / Save / **QuickSave** / Pin / Cancel（此时也可直接按 **Ctrl+C** 复制）。QuickSave 不弹窗，直接存到默认文件夹（托盘菜单 **Set QuickSave Folder...** 可修改，未设置时默认为 图片\JunkyScreenShot）。
 7. 点 **Pen** 开启画笔：下方出现调色板（3 档粗细 + 15 色），在选区内按住左键手写；**Ctrl+Z** 或 Undo 撤销上一笔；右键退出画笔模式。笔迹会包含在 Copy / Save / Pin 的结果里。
 8. Pin 出来的贴图窗口：左键拖动，滚轮缩放，**双击关闭**。
 9. **Esc** 或右键（非画笔模式下）随时取消截图模式。托盘菜单 Exit 退出程序。

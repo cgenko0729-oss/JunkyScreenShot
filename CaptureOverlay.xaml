@@ -39,6 +39,7 @@
                     <Button Content="Undo" Margin="2" Padding="12,4" Click="UndoButton_Click"/>
                     <Button Content="Copy" Margin="2" Padding="12,4" Click="CopyButton_Click"/>
                     <Button Content="Save" Margin="2" Padding="12,4" Click="SaveButton_Click"/>
+                    <Button Content="QuickSave" Margin="2" Padding="12,4" Click="QuickSaveButton_Click"/>
                     <Button Content="Pin" Margin="2" Padding="12,4" Click="PinButton_Click"/>
                     <Button Content="Cancel" Margin="2" Padding="12,4" Click="CancelButton_Click"/>
                 </StackPanel>

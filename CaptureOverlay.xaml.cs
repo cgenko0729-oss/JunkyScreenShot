@@ -586,11 +586,24 @@ namespace JunkyScreenShot
             Close();
         }
 
+        /// <summary>Encodes the current selection as PNG at the given path.</summary>
+        private void SavePng(string filePath)
+        {
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(GetSelectedImage()));
+            using (var stream = File.Create(filePath))
+            {
+                encoder.Save(stream);
+            }
+        }
+
+        private static string DefaultFileName => $"screenshot_{DateTime.Now:yyyyMMdd_HHmmss}";
+
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
-                FileName = $"screenshot_{DateTime.Now:yyyyMMdd_HHmmss}",
+                FileName = DefaultFileName,
                 DefaultExt = ".png",
                 Filter = "PNG Image|*.png"
             };
@@ -599,17 +612,35 @@ namespace JunkyScreenShot
 
             try
             {
-                var encoder = new PngBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(GetSelectedImage()));
-                using (var stream = File.Create(dialog.FileName))
-                {
-                    encoder.Save(stream);
-                }
+                SavePng(dialog.FileName);
                 Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(this, "Failed to save file: " + ex.Message, "JunkyScreenShot");
+            }
+        }
+
+        /// <summary>Saves straight into the default folder (tray menu: Set QuickSave Folder), no dialog.</summary>
+        private void QuickSaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string folder = App.GetQuickSaveFolder();
+                Directory.CreateDirectory(folder); // first use: folder may not exist yet
+
+                // Timestamped name; add a numeric suffix in the unlikely same-second collision.
+                string name = DefaultFileName; // snapshot once: the property re-reads the clock
+                string path = System.IO.Path.Combine(folder, name + ".png");
+                for (int i = 1; File.Exists(path); i++)
+                    path = System.IO.Path.Combine(folder, $"{name}_{i}.png");
+
+                SavePng(path);
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "QuickSave failed: " + ex.Message, "JunkyScreenShot");
             }
         }
 
