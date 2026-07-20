@@ -8,13 +8,14 @@ namespace JunkyScreenShot
 {
     /// <summary>
     /// Application entry point. No main window: the app lives in the system tray,
-    /// listens for the F2 global hotkey and opens the capture overlay on demand.
+    /// listens for the F1 global hotkey and opens the capture overlay on demand.
     /// </summary>
     public partial class App : Application
     {
         private const int HotkeyId = 1;
 
         private WinForms.NotifyIcon? _trayIcon;
+        private System.Drawing.Icon? _appIcon;
         private HwndSource? _hotkeyWindow;
         private CaptureOverlay? _overlay;
 
@@ -37,6 +38,7 @@ namespace JunkyScreenShot
                 _trayIcon.Visible = false;
                 _trayIcon.Dispose();
             }
+            _appIcon?.Dispose();
             base.OnExit(e);
         }
 
@@ -98,15 +100,17 @@ namespace JunkyScreenShot
         private void CreateTrayIcon()
         {
             var menu = new WinForms.ContextMenuStrip();
-            menu.Items.Add("Capture (F2)", null, (_, _) => StartCapture());
+            menu.Items.Add("Capture (F1)", null, (_, _) => StartCapture());
             menu.Items.Add("Set QuickSave Folder...", null, (_, _) => ChooseQuickSaveFolder());
             menu.Items.Add("Exit", null, (_, _) => Shutdown());
 
+            if (Environment.ProcessPath is string processPath)
+                _appIcon = System.Drawing.Icon.ExtractAssociatedIcon(processPath);
+
             _trayIcon = new WinForms.NotifyIcon
             {
-                // TODO: replace with a custom .ico later; system icon keeps v1 dependency-free.
-                Icon = System.Drawing.SystemIcons.Application,
-                Text = "JunkyScreenShot - Press F2 to capture",
+                Icon = _appIcon ?? System.Drawing.SystemIcons.Application,
+                Text = "JunkyScreenShot - Press F1 to capture",
                 Visible = true,
                 ContextMenuStrip = menu
             };
@@ -122,11 +126,11 @@ namespace JunkyScreenShot
             _hotkeyWindow = new HwndSource(parameters);
             _hotkeyWindow.AddHook(HotkeyWndProc);
 
-            if (!NativeMethods.RegisterHotKey(_hotkeyWindow.Handle, HotkeyId, 0, NativeMethods.VK_F2))
+            if (!NativeMethods.RegisterHotKey(_hotkeyWindow.Handle, HotkeyId, 0, NativeMethods.VK_F1))
             {
-                // Most likely another app already owns F2. The tray menu still works.
+                // Most likely another app already owns F1. The tray menu still works.
                 MessageBox.Show(
-                    "Failed to register the F2 global hotkey (maybe used by another app).\n" +
+                    "Failed to register the F1 global hotkey (maybe used by another app).\n" +
                     "You can still capture from the tray icon menu.",
                     "JunkyScreenShot", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
@@ -145,7 +149,7 @@ namespace JunkyScreenShot
         private void StartCapture()
         {
             if (_overlay != null)
-                return; // capture mode already active, ignore repeated F2
+                return; // capture mode already active, ignore repeated F1
 
             try
             {

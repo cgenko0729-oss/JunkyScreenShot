@@ -9,7 +9,7 @@ namespace JunkyScreenShot
     internal static class NativeMethods
     {
         public const int WM_HOTKEY = 0x0312;
-        public const uint VK_F2 = 0x71;
+        public const uint VK_F1 = 0x70;
 
         // DwmGetWindowAttribute attributes
         public const int DWMWA_EXTENDED_FRAME_BOUNDS = 9; // visible window bounds without drop shadow

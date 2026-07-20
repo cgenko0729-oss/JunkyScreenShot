@@ -318,8 +318,20 @@ namespace JunkyScreenShot
             }
             if (_state != CaptureState.Selected)
                 return;
+            // Ctrl+S saves immediately; Ctrl+Shift+S opens Save As.
+            if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                e.Handled = true;
+                QuickSaveSelection();
+            }
+            else if (e.Key == Key.S &&
+                     Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
+                e.Handled = true;
+                SaveSelectionAs();
+            }
             // Ctrl+C copies the confirmed selection, same as the Copy button.
-            if (e.Key == Key.C && Keyboard.Modifiers == ModifierKeys.Control)
+            else if (e.Key == Key.C && Keyboard.Modifiers == ModifierKeys.Control)
             {
                 e.Handled = true;
                 CopySelectionAndClose();
@@ -509,11 +521,6 @@ namespace JunkyScreenShot
             SetPenMode(!_penMode);
         }
 
-        private void UndoButton_Click(object sender, RoutedEventArgs e)
-        {
-            UndoStroke();
-        }
-
         // ---- Image export ----
 
         /// <summary>
@@ -601,6 +608,11 @@ namespace JunkyScreenShot
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
+            SaveSelectionAs();
+        }
+
+        private void SaveSelectionAs()
+        {
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
                 FileName = DefaultFileName,
@@ -624,6 +636,12 @@ namespace JunkyScreenShot
         /// <summary>Saves straight into the default folder (tray menu: Set QuickSave Folder), no dialog.</summary>
         private void QuickSaveButton_Click(object sender, RoutedEventArgs e)
         {
+            QuickSaveSelection();
+        }
+
+        private void QuickSaveSelection()
+        {
+            string path;
             try
             {
                 string folder = App.GetQuickSaveFolder();
@@ -631,17 +649,28 @@ namespace JunkyScreenShot
 
                 // Timestamped name; add a numeric suffix in the unlikely same-second collision.
                 string name = DefaultFileName; // snapshot once: the property re-reads the clock
-                string path = System.IO.Path.Combine(folder, name + ".png");
+                path = System.IO.Path.Combine(folder, name + ".png");
                 for (int i = 1; File.Exists(path); i++)
                     path = System.IO.Path.Combine(folder, $"{name}_{i}.png");
 
                 SavePng(path);
-                Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(this, "QuickSave failed: " + ex.Message, "JunkyScreenShot");
+                return;
             }
+
+            try
+            {
+                Clipboard.SetText(path);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Screenshot saved, but its path could not be copied: " + ex.Message,
+                    "JunkyScreenShot");
+            }
+            Close();
         }
 
         private void PinButton_Click(object sender, RoutedEventArgs e)

@@ -9,11 +9,11 @@
 用 C# + WPF (.NET 8) 做一个轻量级的 Windows 截图工具，核心流程类似 Snipaste：
 
 1. 程序在后台运行（托盘图标）。
-2. 按 F2 进入截图模式，屏幕"冻结"并变暗。
+2. 按 F1 进入截图模式，屏幕"冻结"并变暗。
 3. 鼠标移动时自动检测光标下的窗口并用蓝色边框高亮。
 4. 也可以按住左键拖拽手动框选区域。
-5. 选定区域后在附近弹出小工具条：Copy / Save / Pin / Cancel。
-6. Pin 会创建一个置顶的贴图窗口，可拖动，双击关闭。
+5. 选定区域后在附近弹出小工具条：Pen / Copy / Save / QuickSave / Pin / Cancel。
+6. Pin 会创建一个置顶的贴图窗口，可拖动、滚轮缩放、双击关闭，也可右键选择 Delete Pin 删除。
 7. Esc 随时取消截图模式。
 
 设计原则：KISS，不过度设计，不拆太多类，第一版不做标注功能。
@@ -25,7 +25,7 @@
 1. ✅ 创建 whatAiDo.md 并写下计划（本文件）
 2. ✅ 创建 WPF 项目结构（csproj / app.manifest / App.xaml）
 3. ✅ 实现后台运行 + 托盘图标（用 WinForms NotifyIcon，无需额外 NuGet 包）
-4. ✅ 实现 F2 全局热键（RegisterHotKey + 消息窗口）
+4. ✅ 实现 F1 全局热键（RegisterHotKey + 消息窗口）
 5. ✅ 实现截图遮罩窗口（先截全屏 → 作为背景 → 盖半透明黑层）
 6. ✅ 实现手动拖拽框选（蓝框 + 尺寸提示）
 7. ✅ 实现窗口自动检测（EnumWindows + DWM 窗口边界）
@@ -40,12 +40,12 @@
 
 | 文件 | 职责 |
 |---|---|
-| `JunkyScreenShot.csproj` | 项目文件，net8.0-windows，启用 WPF + WinForms（WinForms 只用于 NotifyIcon 托盘图标和屏幕截取） |
+| `JunkyScreenShot.csproj` | 项目文件，net8.0-windows，启用 WPF + WinForms，并把 `app.ico` 嵌入 EXE |
 | `app.manifest` | 声明 PerMonitorV2 DPI 感知，保证截图坐标与物理像素对应 |
-| `App.xaml` / `App.xaml.cs` | 程序入口。无主窗口（ShutdownMode=OnExplicitShutdown），负责：托盘图标、F2 全局热键注册、启动截图模式 |
+| `App.xaml` / `App.xaml.cs` | 程序入口。无主窗口（ShutdownMode=OnExplicitShutdown），负责：托盘图标、F1 全局热键注册、启动截图模式 |
 | `NativeMethods.cs` | 所有 Win32 API 声明（RegisterHotKey、EnumWindows、DwmGetWindowAttribute 等），集中放一处 |
-| `CaptureOverlay.xaml` / `.cs` | 截图核心：全屏遮罩窗口。负责屏幕截取、变暗效果、窗口检测高亮、拖拽框选、尺寸提示、工具条、Copy/Save/Pin/Cancel 动作 |
-| `PinWindow.xaml` / `.cs` | 贴图窗口：无边框、置顶、可拖动、双击关闭、滚轮缩放（可选功能） |
+| `CaptureOverlay.xaml` / `.cs` | 截图核心：全屏遮罩窗口。负责屏幕截取、变暗效果、窗口检测高亮、拖拽框选、画笔、工具条、复制、保存和置顶动作 |
+| `PinWindow.xaml` / `.cs` | 贴图窗口：无边框、置顶、可拖动、双击关闭、滚轮缩放、右键菜单删除 |
 | `whatAiDo.md` | 本开发记录文件 |
 
 类的数量刻意控制在 4 个（App / NativeMethods / CaptureOverlay / PinWindow），不做 MVVM，逻辑写在 code-behind。
@@ -153,7 +153,34 @@
   - 解决办法：改用 `IncludeAllContentForSelfExtract=true`（.NET Core 3.1 式整体自解压，首次运行解压到 %TEMP%，WPF 兼容）。验证通过：启动后 12 秒存活、事件日志无新崩溃。
 - **为什么**：用户想把程序分发给不会用终端的人，双击 exe 就能用。
 - **影响文件**：`publish.cmd`（新建）、`whatAiDo.md`
-- **说明**：程序没有单实例保护，双开会导致 F2 热键冲突（第二个实例会弹警告）和双托盘图标，已记入 TODO。
+- **说明**：程序没有单实例保护，双开会导致 F1 热键冲突（第二个实例会弹警告）和双托盘图标，已记入 TODO。
+
+### 2026-07-18 第 11 步：简化画笔撤销、贴图右键删除、F1 快捷键、QuickSave 路径复制
+- **做了什么**：
+  - 移除工具条上的 Undo 按钮，画笔撤销只保留 **Ctrl+Z**。
+  - 置顶贴图增加右键菜单 **Delete Pin**，点击后关闭并删除该贴图窗口。
+  - 全局截图快捷键由 **F2** 改为 **F1**，并同步修改托盘菜单、托盘提示和注册失败提示。
+  - QuickSave 保存到自定义文件夹后，把生成的 PNG 完整路径复制到剪贴板；如果仅路径复制失败，会明确提示图片已经保存。
+- **影响文件**：`CaptureOverlay.xaml`、`CaptureOverlay.xaml.cs`、`PinWindow.xaml`、`PinWindow.xaml.cs`、`NativeMethods.cs`、`App.xaml.cs`、`whatAiDo.md`
+- **说明**：`dotnet build` 已通过，0 警告、0 错误；快捷键和鼠标交互仍需在 Windows 桌面上人工确认。
+
+### 2026-07-18 第 12 步：QuickSave / Save As 快捷键和工具栏悬停提示
+- **做了什么**：
+  - 选定截图区域后，按 **Ctrl+S** 直接 QuickSave 到自定义文件夹，并复制完整图片路径。
+  - 选定截图区域后，按 **Ctrl+Shift+S** 打开普通 Save As 对话框。
+  - 工具栏按钮增加悬停提示：Copy 显示 Ctrl+C、Save 显示 Ctrl+Shift+S、QuickSave 显示 Ctrl+S、Cancel 显示 Esc；没有快捷键的 Pen 和 Pin 也显示功能说明。
+  - 保存按钮和快捷键复用相同方法，确保鼠标与键盘操作行为一致。
+- **影响文件**：`CaptureOverlay.xaml`、`CaptureOverlay.xaml.cs`、`whatAiDo.md`
+- **说明**：`dotnet build` 已通过，0 警告、0 错误。
+
+### 2026-07-18 第 13 步：自定义 EXE 和系统托盘图标
+- **做了什么**：
+  - 把用户提供的 `screenshotappicon.png` 转换为多尺寸 `app.ico`，内含 16/20/24/32/40/48/64/128/256 像素版本。
+  - 在项目文件中设置 `ApplicationIcon`，让发布后的 EXE 和文件资源管理器显示自定义图标。
+  - 托盘图标不再使用 Windows 默认应用图标，改为从当前 EXE 提取同一个自定义图标。
+  - 应用退出时释放图标资源，避免原生图标句柄泄漏。
+- **影响文件**：`screenshotappicon.png`、`app.ico`、`JunkyScreenShot.csproj`、`App.xaml.cs`、`whatAiDo.md`
+- **说明**：`dotnet build` 已通过，0 警告、0 错误，并确认构建出的 EXE 内含可提取的 32×32 图标。
 
 ---
 
@@ -161,12 +188,12 @@
 
 1. `dotnet run` 或在 Visual Studio 打开 `JunkyScreenShot.csproj` 按 F5。
 2. 程序无窗口，看系统托盘出现图标即为启动成功。
-3. 按 **F2**（或托盘菜单 Capture）：屏幕冻结变暗。
+3. 按 **F1**（或托盘菜单 Capture）：屏幕冻结变暗。
 4. 移动鼠标：光标下的窗口出现蓝框；**单击**即选中该窗口区域。
 5. 或按住左键**拖拽**：画出蓝色选框，旁边显示 "宽 x 高 px"。
-6. 松开后出现工具条：Pen / Undo / Copy / Save / **QuickSave** / Pin / Cancel（此时也可直接按 **Ctrl+C** 复制）。QuickSave 不弹窗，直接存到默认文件夹（托盘菜单 **Set QuickSave Folder...** 可修改，未设置时默认为 图片\JunkyScreenShot）。
-7. 点 **Pen** 开启画笔：下方出现调色板（3 档粗细 + 15 色），在选区内按住左键手写；**Ctrl+Z** 或 Undo 撤销上一笔；右键退出画笔模式。笔迹会包含在 Copy / Save / Pin 的结果里。
-8. Pin 出来的贴图窗口：左键拖动，滚轮缩放，**双击关闭**。
+6. 松开后出现工具条：Pen / Copy / Save / **QuickSave** / Pin / Cancel。悬停按钮会显示功能及其快捷键；可按 **Ctrl+C** 复制、**Ctrl+S** QuickSave、**Ctrl+Shift+S** 另存为。QuickSave 不弹窗，直接存到默认文件夹（托盘菜单 **Set QuickSave Folder...** 可修改，未设置时默认为 图片\JunkyScreenShot），并把保存后的完整路径复制到剪贴板。
+7. 点 **Pen** 开启画笔：下方出现调色板（3 档粗细 + 15 色），在选区内按住左键手写；按 **Ctrl+Z** 撤销上一笔；右键退出画笔模式。笔迹会包含在 Copy / Save / Pin 的结果里。
+8. Pin 出来的贴图窗口：左键拖动，滚轮缩放，双击关闭，或右键选择 **Delete Pin** 删除。
 9. **Esc** 或右键（非画笔模式下）随时取消截图模式。托盘菜单 Exit 退出程序。
 
 ---
@@ -174,12 +201,12 @@
 ## 已知问题 / TODO
 
 - [ ] **多显示器**：第一版只支持主显示器截图（遮罩只盖主屏）。多屏 + 混合 DPI 的坐标换算复杂，留到后续版本。
-- [ ] **完整交互流程未经人工验证**：编译和启动测试已通过，但 F2 → 选区 → Copy/Save/Pin 的真机操作需要用户手动过一遍（见上方"如何测试"）。
-- [ ] 托盘图标用的是系统默认应用图标，后续可换成自定义 .ico。
+- [ ] **完整交互流程未经人工验证**：编译和启动测试已通过，但 F1 → 选区 → Copy/Save/Pin 的真机操作需要用户手动过一遍（见上方"如何测试"）。
+- [x] ~~托盘图标使用系统默认应用图标~~ 已改为自定义 `app.ico`，EXE 与托盘共用同一图标（第 13 步）。
 - [ ] Pin 之后再截图时，贴图窗口本身会被当作普通窗口检测到/截进去 —— 这与 Snipaste 行为一致，暂视为特性而非 bug。
 - [ ] 窗口检测只识别顶层窗口，不识别子控件/面板区域（第一版按需求刻意从简）。
 - [ ] 剪贴板偶发被其他程序占用会导致 Copy 失败（已 try-catch 弹提示，未做自动重试）。
 - [x] ~~第一版没有标注功能~~ 已加入**画笔**标注（第 7 步）。
 - [ ] 其他标注工具未做：箭头、矩形/椭圆框、文字、马赛克、橡皮擦、Redo（重做）。参考图里的完整工具条留待后续版本。
 - [ ] 画笔粗细只有 3 档固定值（2/4/8），没有自定义取色器。
-- [ ] **没有单实例保护**：双开程序会导致 F2 热键冲突和双托盘图标，后续可用 Mutex 实现"已运行则不再启动"。
+- [ ] **没有单实例保护**：双开程序会导致 F1 热键冲突和双托盘图标，后续可用 Mutex 实现"已运行则不再启动"。

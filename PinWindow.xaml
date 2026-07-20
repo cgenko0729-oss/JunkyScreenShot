@@ -9,6 +9,12 @@
         SizeToContent="WidthAndHeight">
     <!-- Thin blue border so the pinned image stands out from the page behind it. -->
     <Border BorderBrush="#FF2D8CFF" BorderThickness="1" Background="White">
-        <Image x:Name="PinnedImage" Stretch="Fill"/>
+        <Image x:Name="PinnedImage" Stretch="Fill">
+            <Image.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Delete Pin" Click="DeletePinMenuItem_Click"/>
+                </ContextMenu>
+            </Image.ContextMenu>
+        </Image>
     </Border>
 </Window>
