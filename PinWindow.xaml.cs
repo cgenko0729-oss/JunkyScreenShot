@@ -53,5 +53,10 @@ namespace JunkyScreenShot
             PinnedImage.Width = _originalWidth * _zoom;
             PinnedImage.Height = _originalHeight * _zoom;
         }
+
+        private void DeletePinMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 }

@@ -35,13 +35,18 @@
                     Padding="4" Visibility="Collapsed"
                     BorderBrush="#FF888888" BorderThickness="1">
                 <StackPanel Orientation="Horizontal">
-                    <Button x:Name="PenButton" Content="Pen" Margin="2" Padding="12,4" Click="PenButton_Click"/>
-                    <Button Content="Undo" Margin="2" Padding="12,4" Click="UndoButton_Click"/>
-                    <Button Content="Copy" Margin="2" Padding="12,4" Click="CopyButton_Click"/>
-                    <Button Content="Save" Margin="2" Padding="12,4" Click="SaveButton_Click"/>
-                    <Button Content="QuickSave" Margin="2" Padding="12,4" Click="QuickSaveButton_Click"/>
-                    <Button Content="Pin" Margin="2" Padding="12,4" Click="PinButton_Click"/>
-                    <Button Content="Cancel" Margin="2" Padding="12,4" Click="CancelButton_Click"/>
+                    <Button x:Name="PenButton" Content="Pen" ToolTip="Pen tool"
+                            Margin="2" Padding="12,4" Click="PenButton_Click"/>
+                    <Button Content="Copy" ToolTip="Copy (Ctrl+C)"
+                            Margin="2" Padding="12,4" Click="CopyButton_Click"/>
+                    <Button Content="Save" ToolTip="Save As (Ctrl+Shift+S)"
+                            Margin="2" Padding="12,4" Click="SaveButton_Click"/>
+                    <Button Content="QuickSave" ToolTip="QuickSave (Ctrl+S)"
+                            Margin="2" Padding="12,4" Click="QuickSaveButton_Click"/>
+                    <Button Content="Pin" ToolTip="Pin image"
+                            Margin="2" Padding="12,4" Click="PinButton_Click"/>
+                    <Button Content="Cancel" ToolTip="Cancel (Esc)"
+                            Margin="2" Padding="12,4" Click="CancelButton_Click"/>
                 </StackPanel>
             </Border>
 

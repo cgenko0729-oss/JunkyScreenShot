@@ -9,6 +9,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>app.ico</ApplicationIcon>
     <!-- WFAC010: the WinForms analyzer wants DPI set via API, but this is a WPF app
          and WPF only honors the manifest. Safe to suppress. -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
