@@ -210,3 +210,12 @@
 - [ ] 其他标注工具未做：箭头、矩形/椭圆框、文字、马赛克、橡皮擦、Redo（重做）。参考图里的完整工具条留待后续版本。
 - [ ] 画笔粗细只有 3 档固定值（2/4/8），没有自定义取色器。
 - [ ] **没有单实例保护**：双开程序会导致 F1 热键冲突和双托盘图标，后续可用 Mutex 实现"已运行则不再启动"。
+
+---
+
+### 2026-07-21 第 14 步：把构建好的 exe 直接提交到仓库（分支 feature/dist-exe）
+
+- **做了什么**：用 `publish.cmd` 同样的参数跑 `dotnet publish` 生成自包含单文件 exe，拷贝到新建的 `dist/JunkyScreenShot.exe`（不在 `.gitignore` 排除的 `bin/` 里），直接提交进仓库并推送到 GitHub。
+- **为什么**：用户想要任何人打开仓库就能直接下载到 exe 双击运行，不想走 GitHub Release 手动上传流程。
+- **影响文件**：`dist/JunkyScreenShot.exe`（新建，~68 MB）
+- **注意**：这个二进制文件不会随代码改动自动更新，以后每次发布新版本都要重新 `dotnet publish` 并覆盖 `dist/JunkyScreenShot.exe` 再提交。
